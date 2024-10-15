@@ -459,5 +459,5 @@ def renormalize_pngs_route():
 if __name__ == '__main__':
     # Start the scheduler
     #start_scheduler()
-    app.run()
+    app.run(debug=True)
 

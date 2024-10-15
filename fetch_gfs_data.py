@@ -143,6 +143,7 @@ def find_grib_files(param, level):
 def create_meta_file(png_filename, param, level, lat_min, lat_max, lon_min, lon_max, grib_file, data_min, data_max):
     """Create a meta file with description of the data used to generate the PNG, including min and max values."""
     meta_filename = png_filename.replace('.png', '.info')
+    os.makedirs(PNG_DIR, exist_ok=True)     
     meta_filepath = os.path.join(PNG_DIR, meta_filename)
     
     with open(meta_filepath, 'w') as meta_file:

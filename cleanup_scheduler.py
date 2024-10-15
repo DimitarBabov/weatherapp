@@ -15,13 +15,25 @@ DAYS_TO_KEEP_FILES = 2  # Example: Keep files in recycle_bin for 2 days
 
 # Ensure the recycle bin and its subfolders exist
 def ensure_recycle_bin():
-    os.makedirs(RECYCLE_BIN_DIR, exist_ok=True)
-   
+    try:
+        os.makedirs(RECYCLE_BIN_DIR, exist_ok=True)
+        print(f"Directory {RECYCLE_BIN_DIR} created or already exists.")
+    except Exception as e:
+        print(f"Failed to create directory {RECYCLE_BIN_DIR}: {e}")
+    
+# Ensure the recycle bin and its subfolders exist
+def ensure_png_data():
+    try:
+        os.makedirs(PNG_DIR, exist_ok=True)
+        print(f"Directory {PNG_DIR} created or already exists.")
+    except Exception as e:
+        print(f"Failed to create directory {PNG_DIR}: {e}")
 
 def move_files_to_recycle_bin(src_dir, dest_dir):
     """
     Move all files from src_dir to dest_dir (recycle bin).
     """
+    ensure_recycle_bin()
     for filename in os.listdir(src_dir):
         file_path = os.path.join(src_dir, filename)
         if os.path.isfile(file_path):
@@ -38,8 +50,29 @@ def move_files_with_prefix_to_recycle_bin(src_dir, dest_dir, prefix):
     - dest_dir: Destination directory (recycle bin).
     - prefix: The string prefix to filter filenames.
     """
-    if not os.path.exists(dest_dir):
-        os.makedirs(dest_dir)  # Ensure the destination directory exists
+    
+    # Debug: Print the source directory path to ensure it's correct
+    print(f"Checking path: '{src_dir}'")
+    
+    # Convert to absolute path
+    src_dir = os.path.abspath(src_dir)
+    print(f"Absolute path: '{src_dir}'")
+    os.makedirs(src_dir, exist_ok=True)
+    # Ensure the source directory exists and is a directory
+    if not os.path.exists(src_dir):
+        raise ValueError(f"Source directory in func move_files_with_prefix_to_recycle_bin'{src_dir}' does not exist.")
+    if not os.path.isdir(src_dir):
+        raise ValueError(f"Source path '{src_dir}' is not a directory.")
+    
+    # Ensure the destination directory exists (create it if necessary)
+    os.makedirs(dest_dir, exist_ok=True)
+
+    # Debug: List the directory contents to make sure it can be accessed
+    try:
+        files_in_dir = os.listdir(src_dir)
+        print(f"Files in source directory: {files_in_dir}")
+    except Exception as e:
+        raise ValueError(f"Error accessing '{src_dir}': {e}")
 
     for filename in os.listdir(src_dir):
         # Check if the filename starts with the specified prefix
@@ -56,6 +89,7 @@ def delete_old_files(directory):
     """
     Deletes all files in the specified directory.
     """
+    ensure_recycle_bin()
     for filename in os.listdir(directory):
         file_path = os.path.join(directory, filename)
         if os.path.isfile(file_path):
