@@ -10,9 +10,12 @@ import matplotlib.pyplot as plt
 
 
 # Directory to store GFS data
-DOWNLOAD_DIR = "/tmp/gfs_data"
+#GFS_DIR = "/gfs_data"
+#GFS_DIR = "/home/mko0/weatherapp/gfs_data"
+GFS_DIR = "gfs_data"
 
-PNG_DIR = "/tmp/png_data"
+
+PNG_DIR = "png_data"
 
 def get_latest_gfs_run():
     """Fetch the latest GFS run date and time."""
@@ -95,12 +98,12 @@ def get_filtered_gfs_files(date, run, param, level, num_forecasts):
 def save_filtered_files(file_data):
        
     """Save the filtered GFS files to the specified directory."""    
-    os.makedirs(DOWNLOAD_DIR, exist_ok=True) 
+    os.makedirs(GFS_DIR, exist_ok=True) 
 
     downloaded_files = []
 
     for file_name, file_content in file_data:
-        file_path = os.path.join(DOWNLOAD_DIR, file_name)
+        file_path = os.path.join(GFS_DIR, file_name)
         
         print(f"Saving: {file_name}")
         with open(file_path, 'wb') as f:
@@ -115,12 +118,12 @@ def save_filtered_files(file_data):
 def find_grib_file(param, level):
     """Search for the corresponding GRIB file in the gfs_data folder."""
     
-    for filename in os.listdir(DOWNLOAD_DIR):
+    for filename in os.listdir(GFS_DIR):
         print(filename)
         print(param)
         print(level)
         if param in filename and f'{level}' in filename and filename.endswith('.grb2'):
-            return os.path.join(DOWNLOAD_DIR, filename)
+            return os.path.join(GFS_DIR, filename)
     return None
 
 
@@ -128,14 +131,22 @@ def find_grib_files(param, level):
     """Search for all corresponding GRIB files in the gfs_data folder that match param and level."""
     matching_files = []
     
-    # Iterate through the files in the DOWNLOAD_DIR
-    for filename in os.listdir(DOWNLOAD_DIR):
+    print(os.getcwd())
+    print(os.listdir(os.getcwd()))
+    for dir in os.listdir(os.getcwd()):
+        if os.path.isdir(dir):
+            print(os.listdir(dir))
+
+        #print(f"Checking file: {filename}")
+
+    # Iterate through the files in the GFS_DIR
+    for filename in os.listdir(GFS_DIR):
         print(f"Checking file: {filename}")
         
         # Check if both param and level are part of the filename and if it ends with .grb2
         if param in filename and f'{level}' in filename and filename.endswith('.grb2'):
             # If both conditions are satisfied, add the file to the list of matches
-            matching_files.append(os.path.join(DOWNLOAD_DIR, filename))
+            matching_files.append(os.path.join(GFS_DIR, filename))
     
     # Return the list of matching files, or None if no matches found
     return matching_files if matching_files else None

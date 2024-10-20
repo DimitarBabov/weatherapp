@@ -6,9 +6,9 @@ from datetime import datetime, timedelta
 import threading
 
 # Directories for the PNG and GFS data
-PNG_DIR = "/tmp/png_data"
-GFS_DIR = "/tmp/gfs_data"
-RECYCLE_BIN_DIR = "/tmp/recycle_bin"
+PNG_DIR = "/png_data"
+GFS_DIR = "/gfs_data"
+RECYCLE_BIN_DIR = "/recycle_bin"
 
 # How many days to keep files in the recycle_bin before deleting them
 DAYS_TO_KEEP_FILES = 2  # Example: Keep files in recycle_bin for 2 days

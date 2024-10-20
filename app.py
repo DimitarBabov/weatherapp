@@ -102,6 +102,7 @@ def get_forecast_data(lat, lon):
     # Extract forecast URL
     try:
         forecast_url = data['properties']['forecast']
+        print(forecast_url)
     except KeyError:
         return {"error": "Unable to find forecast URL."}, 404
 
@@ -120,6 +121,32 @@ def get_forecast_data(lat, lon):
         period['icon'] = period.get('icon', '')
 
     return forecast_periods, 200
+
+
+# Function to get RAw weather forecast data from NOAA, including icons.only DEBUG
+def get_forecast_data_raw(lat, lon):
+    # Get the forecast grid information for the given latitude and longitude
+    url = f"https://api.weather.gov/points/{lat},{lon}"
+    response = requests.get(url)
+    if response.status_code != 200:
+        return {"error": "Invalid latitude/longitude or NOAA service issue."}, 400
+
+    data = response.json()
+    print(response)
+    # Extract forecast URL
+    try:
+        forecast_url = data['properties']['forecast']
+        print(forecast_url)
+    except KeyError:
+        return {"error": "Unable to find forecast URL."}, 404
+
+    # Fetch the forecast data
+    forecast_response = requests.get(forecast_url)
+    if forecast_response.status_code != 200:
+        return {"error": "Unable to fetch forecast data."}, 500
+
+    forecast_data = forecast_response.json()
+    return forecast_data, 200
 
 # Route to get weather data by latitude and longitude
 @app.route('/weather/latlon', methods=['GET'])
@@ -172,7 +199,7 @@ def weather_forecast():
         return jsonify({"error": "Invalid latitude or longitude format."}), 400
 
     # Fetch the forecast data
-    forecast_data, status = get_forecast_data(lat, lon)
+    forecast_data, status = get_forecast_data_raw(lat, lon)
     return jsonify(forecast_data), status
 
 # Route to get weather forecast by ZIP code
