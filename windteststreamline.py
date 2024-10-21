@@ -10,17 +10,15 @@ def load_wind_component(file_path):
         img = img.convert('L')  # Convert to grayscale
         return np.array(img, dtype=np.float32) / 255.0 * 2 - 1  # Scale to range [-1, 1]
 
-# Generate a quiver plot based on the U and V components
-def generate_quiver_plot(u_component, v_component, output_file):
-    x = np.linspace(0, u_component.shape[1] - 1, 40)  # Increase the number of arrows for higher density
-    y = np.linspace(0, u_component.shape[0] - 1, 40)
+# Generate a streamline plot based on the U and V components
+def generate_streamline_plot(u_component, v_component, output_file):
+    x = np.linspace(0, u_component.shape[1] - 1, u_component.shape[1])
+    y = np.linspace(0, u_component.shape[0] - 1, v_component.shape[0])
     X, Y = np.meshgrid(x, y)
 
-    u_sampled = u_component[::u_component.shape[0] // 40, ::u_component.shape[1] // 40][:40, :40]
-    v_sampled = v_component[::v_component.shape[0] // 40, ::v_component.shape[1] // 40][:40, :40]
-
+    # Plot wind streamlines using matplotlib's streamplot
     plt.figure(figsize=(20.48, 10.24), dpi=100)  # Set the size of the image to 2048xwhatever it comes to
-    plt.quiver(X, Y, u_sampled, v_sampled, angles='xy', scale=20, width=0.001, alpha=0.9, color='white', pivot='middle')  # Scale down arrows twice
+    plt.streamplot(X, Y, u_component, v_component, color='white', linewidth=0.1, density=6.0, arrowsize=0.6)
     plt.axis('off')
 
     # Save the output to a PNG file with the specified dimensions
@@ -45,8 +43,8 @@ if __name__ == "__main__":
                 u_component = load_wind_component(os.path.join(folder_path, u_file))
                 v_component = load_wind_component(os.path.join(folder_path, v_file))
 
-                # Generate and save the quiver plot in the same folder as the source files
+                # Generate and save the streamline plot in the same folder as the source files
                 output_file = os.path.join(folder_path, f"WIND_{common_part}.png")
-                generate_quiver_plot(u_component, v_component, output_file)
+                generate_streamline_plot(u_component, v_component, output_file)
 
-                print(f"Wind quiver image generated successfully: {output_file}")
+                print(f"Wind streamline image generated successfully: {output_file}")

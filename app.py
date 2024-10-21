@@ -1,9 +1,11 @@
 import csv
+import glob
 import os
 import requests
 from flask import Flask, jsonify, request, send_file, send_from_directory
 from cleanup_scheduler import cleanup_old_param_files, start_scheduler
-from fetch_gfs_data import  PNG_DIR, find_global_min_max, find_grib_file, find_grib_files, get_filtered_gfs_files,  get_latest_gfs_run, get_previous_gfs_run, grib_to_png, renormalize_pngs, save_filtered_files, update_and_renormalize, update_info_files_with_global_min_max
+from fetch_gfs_data import  PNG_DIR, delete_all_files_in_directories, find_global_min_max, find_grib_file, find_grib_files, get_filtered_gfs_files,  get_latest_gfs_run, get_previous_gfs_run, grib_to_png, renormalize_pngs, save_filtered_files, update_and_renormalize, update_info_files_with_global_min_max
+from isobariclines import CreateIsobaricLines
 
 app = Flask(__name__)
 
@@ -285,7 +287,7 @@ def fetch_gfs_data():
             return jsonify({"message": "No valid GFS forecast files found after checking previous cycles"}), 404
         
         #Clean up older files in gfs_data folder and png_data folder to make sure we have latest run
-        cleanup_old_param_files(param+level)
+        #cleanup_old_param_files(param+level)
 
         # Step 4: Save the filtered files
         downloaded_files = save_filtered_files(file_data)
@@ -310,49 +312,6 @@ def fetch_gfs_data():
 #http://127.0.0.1:5000/download_grib_png?param=HGT&level=500
 #http://127.0.0.1:5000/create_png?param=HGT&level=500&min_lat=21.13812&max_lat=64.750&min_lon=237.2805&max_lon=312.25
 
-# Route to generate the PNG and return the unique ID and download URLs
-@app.route('/create_png', methods=['GET'])
-def create_png():
-    """
-    Route that searches for the corresponding GRIB file in gfs_data,
-    converts it to a grayscale PNG within the specified lat/lon bounds, 
-    creates a meta file, and returns the unique_id for downloading the PNG and meta file.
-    Parameters:
-    - param: Geophysical parameter (e.g., HGT)
-    - level: Pressure level in mb (e.g., 500)
-    - min_lat, max_lat, min_lon, max_lon: Lat/lon bounds for extracting the data
-    """
-    param = request.args.get('param', default='HGT')
-    level = request.args.get('level', default='500')
-    
-    # Latitude and longitude bounds
-    lat_min = request.args.get('min_lat', type=float)
-    lat_max = request.args.get('max_lat', type=float)
-    lon_min = request.args.get('min_lon', type=float)
-    lon_max = request.args.get('max_lon', type=float)
-    
-    if lat_min is None or lat_max is None or lon_min is None or lon_max is None:
-        return jsonify({"message": "Please provide valid lat/lon bounds"}), 400
-    
-    # Step 1: Find the corresponding GRIB file in the gfs_data folder
-    grib_file = find_grib_file(param, level)
-    
-    if not grib_file:
-        return jsonify({"message": "GRIB file not found"}), 404
-    
-    # Step 2: Convert the GRIB file to grayscale PNG within lat/lon bounds and create meta file
-    png_filepath, meta_filepath, unique_id = grib_to_png(grib_file, param, level, lat_min, lat_max, lon_min, lon_max)
-    
-    if not png_filepath:
-        return jsonify({"message": "Error converting GRIB to PNG"}), 500
-    
-    # Step 3: Return the unique_id, PNG download URL, and meta file download URL
-    return jsonify({
-        "message": "PNG and meta file created successfully",
-        "unique_id": unique_id,
-        "png_download_url": request.url_root + 'download_grib_png/' + unique_id,
-        "meta_download_url": request.url_root + 'download_meta_file/' + unique_id
-    })
 
 @app.route('/generate_pngs', methods=['GET'])
 def generate_pngs():
@@ -421,6 +380,10 @@ def generate_pngs():
     
     # Step 4: Renormalize all PNGs using the global min/max values
     renormalize_pngs(param, level, global_min, global_max)
+
+    #Creates isobaric lines for hgt
+    if(param.startswith("HGT")):
+        CreateIsobaricLines()
     
     # Step 5: Return the list of PNG and meta file download URLs
     return jsonify({
@@ -482,6 +445,86 @@ def renormalize_pngs_route():
         return jsonify({"status": "success", "message": f"Renormalization completed for {param} {level}."}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route('/get_png_meta_links', methods=['GET'])
+def get_png_meta_links():
+    """
+    Route that returns a list of links to download the existing PNG and meta files 
+    starting with the parameter name (e.g., HGT, ABSV).
+
+    Parameters:
+    - param: Geophysical parameter (e.g., HGT)
+    - level: Pressure level in mb (e.g., 500)
+    """
+    param = request.args.get('param', default='HGT')
+    level = request.args.get('level', default='500_mb')
+
+    # Search for all PNG and meta files starting with the parameter name in the PNG_DIR folder
+    png_files = glob.glob(os.path.join(PNG_DIR, f"{param}_{level}*.png"))
+    meta_files = glob.glob(os.path.join(PNG_DIR, f"{param}_{level}*.info"))
+
+    if not png_files and not meta_files:
+        return jsonify({"message": "No matching PNG or meta files found"}), 404
+
+    results = []
+    for png_file, meta_file in zip(png_files, meta_files):
+        # Extract the base name of the files
+        png_filename = os.path.basename(png_file)
+        meta_filename = os.path.basename(meta_file)
+
+        # Add the download URLs to the results list
+        results.append({
+            "png_filename": png_filename,
+            "png_download_url": request.url_root + 'download_grib_png/' + png_filename,            
+            "meta_download_url": request.url_root + 'download_meta_file/' + meta_filename
+        })
+
+    # Return the list of PNG and meta file download URLs
+    return jsonify({
+        "message": f"{len(results)} PNG(s) and meta file(s) found successfully",
+        "results": results
+    })
+
+
+
+
+
+@app.route('/get_isobaric_hgt_links', methods=['GET'])
+def get_isobaric_hgt_links():
+    """
+    Route that returns a list of links to download all PNG files 
+    starting with "ISOBARIC_HGT" in the PNG_DIR folder.
+    """
+
+    # Search for all PNG files starting with "ISOBARIC_HGT" in the PNG_DIR folder
+    png_files = glob.glob(os.path.join(PNG_DIR, "ISOBARIC_HGT*.png"))
+
+    if not png_files:
+        return jsonify({"message": "No matching ISOBARIC_HGT PNG files found"}), 404
+
+    results = []
+    for png_file in png_files:
+        # Extract the base name of the files
+        png_filename = os.path.basename(png_file)
+
+        # Add the download URLs to the results list
+        results.append({
+            "png_filename": png_filename,
+            "png_download_url": request.url_root + 'download_grib_png/' + png_filename
+        })
+
+    # Return the list of PNG file download URLs
+    return jsonify({
+        "message": f"{len(results)} ISOBARIC_HGT PNG file(s) found successfully",
+        "results": results
+    })
+
+
+@app.route('/delete-files', methods=['GET','POST'])
+def delete_files_route():
+    message, status_code = delete_all_files_in_directories()
+    return jsonify({"message": message}), status_code
 
 if __name__ == '__main__':
     # Start the scheduler

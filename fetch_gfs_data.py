@@ -1,4 +1,5 @@
 
+import shutil
 import requests
 import os
 from bs4 import BeautifulSoup
@@ -13,8 +14,6 @@ import matplotlib.pyplot as plt
 #GFS_DIR = "/gfs_data"
 #GFS_DIR = "/home/mko0/weatherapp/gfs_data"
 GFS_DIR = "gfs_data"
-
-
 PNG_DIR = "png_data"
 
 def get_latest_gfs_run():
@@ -364,3 +363,20 @@ def update_and_renormalize(param, level):
         renormalize_pngs(param, level, global_min, global_max)
     else:
         print(f"No .info files found for {param}, {level}")
+
+
+def delete_all_files_in_directories():
+    for directory in [PNG_DIR, GFS_DIR]:
+        if os.path.exists(directory):
+            for filename in os.listdir(directory):
+                file_path = os.path.join(directory, filename)
+                try:
+                    if os.path.isfile(file_path):
+                        os.unlink(file_path)  # Delete the file
+                    elif os.path.isdir(file_path):
+                        shutil.rmtree(file_path)  # Delete the directory and its contents
+                except Exception as e:
+                    return f"Failed to delete {file_path}. Reason: {e}", 500
+        else:
+            return f"{directory} does not exist.", 404
+    return "All files deleted successfully.", 200
