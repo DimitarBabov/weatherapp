@@ -3,7 +3,6 @@ import glob
 import os
 import requests
 from flask import Flask, jsonify, request, send_file, send_from_directory
-from cleanup_scheduler import cleanup_old_param_files, start_scheduler
 from fetch_gfs_data import  PNG_DIR, delete_all_files_in_directories, find_global_min_max, find_grib_file, find_grib_files, get_filtered_gfs_files,  get_latest_gfs_run, get_previous_gfs_run, grib_to_png, renormalize_pngs, save_filtered_files, update_and_renormalize, update_info_files_with_global_min_max
 from isobariclines import CreateIsobaricLines
 
