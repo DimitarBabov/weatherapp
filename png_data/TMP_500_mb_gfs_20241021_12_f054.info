@@ -1,9 +1,0 @@
-Parameter: TMP
-Level: 500_mb
-Latitude bounds: 20.0 to 55.0
-Longitude bounds: 230.0 to 300.0
-Source GRIB file: gfs_data/TMP_500_mb_gfs.20241021_12_f054.grb2
-Min value: 241.9151953125
-Max value: 271.9351953125
-Global Min: 234.42097656250002
-Global Max: 272.613125
