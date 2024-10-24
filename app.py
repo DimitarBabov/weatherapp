@@ -10,7 +10,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Hello, Flask on Google App Engine 1234!"
+    return "Serving... Weather Model Stadium ... Envision Innovative Technologies!"
 
 
 @app.route('/list-files')
@@ -497,10 +497,10 @@ def get_isobaric_hgt_links():
     """
 
     # Search for all PNG files starting with "ISOBARIC_HGT" in the PNG_DIR folder
-    png_files = glob.glob(os.path.join(PNG_DIR, "ISOBARIC_HGT*.png"))
+    png_files = glob.glob(os.path.join(PNG_DIR, "ISOBARICHGT*.png"))
 
     if not png_files:
-        return jsonify({"message": "No matching ISOBARIC_HGT PNG files found"}), 404
+        return jsonify({"message": "No matching ISOBARICHGT PNG files found"}), 404
 
     results = []
     for png_file in png_files:
@@ -515,7 +515,7 @@ def get_isobaric_hgt_links():
 
     # Return the list of PNG file download URLs
     return jsonify({
-        "message": f"{len(results)} ISOBARIC_HGT PNG file(s) found successfully",
+        "message": f"{len(results)} ISOBARICHGT PNG file(s) found successfully",
         "results": results
     })
 

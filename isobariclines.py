@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from scipy.ndimage import gaussian_filter
 from scipy.interpolate import griddata
-from fetch_gfs_data import  PNG_DIR
+from fetch_gfs_data import PNG_DIR
 
 # Load the PNG as a numpy array (assumed to represent pressure or scalar values)
 def load_scalar_field(file_path):
@@ -39,7 +39,7 @@ def generate_isobaric_plot(scalar_field, output_file):
     plt.figure(figsize=(20.48, 10.24), dpi=100)
 
     # Plot contour lines (isobaric lines) with increased levels and smoothing
-    plt.contour(X, Y, scalar_field, levels=20, colors='white', linewidths=0.75)
+    contours = plt.contour(X, Y, scalar_field, levels=20, colors='white', linewidths=0.75)
     
     plt.axis('off')
 
@@ -50,6 +50,24 @@ def generate_isobaric_plot(scalar_field, output_file):
     plt.savefig(output_file, dpi=100, bbox_inches='tight', pad_inches=0, transparent=True)
     plt.close()
 
+    return contours
+
+# Create a matching text file with the same name as the PNG but with a .info extension
+def create_info_file(output_file, scalar_field, contours):
+    info_file = output_file.replace('.png', '.info')
+    min_value = np.min(scalar_field)
+    max_value = np.max(scalar_field)
+    contour_levels = contours.levels
+    
+    with open(info_file, 'w') as f:
+        f.write(f"Min Value: {min_value}\n")
+        f.write(f"Max Value: {max_value}\n")
+        f.write("Contour Levels:\n")
+        for level in contour_levels:
+            f.write(f"  {level}\n")
+    print(f"Info file created successfully: {info_file}")
+
+# Main function to create isobaric lines and corresponding info files
 def CreateIsobaricLines():    
     # Only select PNG files that start with 'HGT'
     png_files = sorted([f for f in os.listdir(PNG_DIR) if f.startswith('HGT') and f.endswith('.png')])
@@ -61,7 +79,13 @@ def CreateIsobaricLines():
         scalar_field_interp = interpolate_data(scalar_field_smoothed, (500, 500))  # Increase resolution
 
         # Generate and save the isobaric plot (contour plot)
-        output_file = os.path.join(PNG_DIR, f"ISOBARIC_{png_file}")
-        generate_isobaric_plot(scalar_field_interp, output_file)
+        output_file = os.path.join(PNG_DIR, f"ISOBARIC{png_file}")
+        contours = generate_isobaric_plot(scalar_field_interp, output_file)
 
-        print(f"Isobaric contour image generated successfully: {output_file}")
+        # Create a matching info file
+        create_info_file(output_file, scalar_field_interp, contours)
+
+        print(f"Isobaric contour image and info file generated successfully: {output_file}")
+
+if __name__ == "__main__":
+    CreateIsobaricLines()

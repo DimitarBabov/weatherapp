@@ -1,0 +1,9 @@
+Parameter: HGT
+Level: 500_mb
+Latitude bounds: 20.0 to 55.0
+Longitude bounds: 230.0 to 300.0
+Source GRIB file: gfs_data/HGT_500_mb_gfs.20241024_12_f066.grb2
+Min value: 5187.3821875
+Max value: 5955.8621875
+Global Min: 5186.6475
+Global Max: 5957.389375
