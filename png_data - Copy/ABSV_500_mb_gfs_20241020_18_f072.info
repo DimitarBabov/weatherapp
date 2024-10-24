@@ -1,9 +1,0 @@
-Parameter: ABSV
-Level: 500_mb
-Latitude bounds: 20.0 to 55.0
-Longitude bounds: 230.0 to 300.0
-Source GRIB file: gfs_data/ABSV_500_mb_gfs.20241020_18_f072.grb2
-Min value: -0.0005733623046875001
-Max value: 0.0008786376953125001
-Global Min: -0.0008150183105468751
-Global Max: 0.0021350558471679693
